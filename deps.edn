@@ -1,6 +1,8 @@
 {:paths ["src"]
 
- :deps {org.clojure/clojure {:mvn/version "1.10.1"}}
+ :deps {org.clojure/clojure {:mvn/version "1.10.1"}
+        http-kit/http-kit   {:mvn/version "2.5.3"}
+        metosin/reitit      {:mvn/version "0.5.12"}}
 
  :aliases
  {:repl {:extra-deps {cider/cider-nrepl {:mvn/version "0.25.6"}}
