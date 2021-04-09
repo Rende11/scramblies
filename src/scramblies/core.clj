@@ -3,10 +3,14 @@
             [reitit.ring :as ring]
             [reitit.coercion.spec :as re-spec]
             [reitit.ring.coercion :as rrc]
+            [reitit.coercion :as coercion]
             [reitit.ring.middleware.parameters :as parameters]
             [reitit.ring.middleware.muuntaja :as muuntaja]
+            [reitit.ring.middleware.exception :as exception]
+            [reitit.dev.pretty :as pretty]
             [muuntaja.core :as m]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [clojure.string :as str]))
 
 (defonce server (atom nil))
 
@@ -31,7 +35,24 @@
 
 (s/def ::scrabmle-query-params
   (s/keys :req-un [:scramblies/one
-                   :scramblies/two] ))
+                   :scramblies/two]))
+
+(defn build-error-message [spec]
+  {:type "error"
+   :message (format "Invalid value %s via: %s"
+                    (:value spec)
+                    (->> spec
+                         :problems
+                         (mapcat :via)
+                         (str/join " ")))})
+
+(defn coercion-error-handler [status]
+  (let [handler (exception/create-coercion-handler status)]
+    (fn [exception request]
+      (let [resp (handler exception request)]
+        (if (get-in resp [:body :problems])
+          (assoc resp :body (build-error-message (:body resp)))
+          resp)))))
 
 (def handler
   (ring/ring-handler
@@ -40,10 +61,17 @@
      ["/scramble" {:parameters {:query ::scrabmle-query-params}
                    :get        {:handler scramble-handler}}]]
     {:data {:muuntaja   m/instance
+            :exception  pretty/exception
             :coercion   re-spec/coercion
+            :compile    coercion/compile-request-coercers
             :middleware [muuntaja/format-middleware
                          parameters/parameters-middleware
                          rrc/coerce-exceptions-middleware
+                         (exception/create-exception-middleware
+                             (merge
+                               exception/default-handlers
+                               {:reitit.coercion/request-coercion (coercion-error-handler 400)
+                                :reitit.coercion/response-coercion (coercion-error-handler 500)}))
                          rrc/coerce-request-middleware
                          rrc/coerce-response-middleware]}})))
 
@@ -65,8 +93,10 @@
   (->
    (handler {:request-method :get
              :uri            "/api/scramble"
-             :query-params   {:one "hello" :two "heoll"}})
-   m/decode-response-body)
-
+             :query-params   {:one1 "hello" :two "world"}})
+   (m/decode-response-body))
+;; => {:type "error",
+;;     :message
+;;     "Invalid value {:one1 \"hello\", :two \"world\"} via: :scramblies.core/scrabmle-query-params"}
 
   )
