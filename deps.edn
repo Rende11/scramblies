@@ -1,4 +1,4 @@
-{:paths ["src"]
+{:paths ["src" "resources"]
 
  :deps {org.clojure/clojure {:mvn/version "1.10.1"}
         http-kit/http-kit   {:mvn/version "2.5.3"}
@@ -10,4 +10,6 @@
 
   :test {:extra-deps  {lambdaisland/kaocha {:mvn/version "1.0.829"}}
          :extra-paths ["test"]
-         :main-opts   ["-m" "kaocha.runner"]}}}
+         :main-opts   ["-m" "kaocha.runner"]}
+
+  :run  {:main-opts ["-m" "scramblies.core"]}}}

@@ -5,3 +5,6 @@ repl:
 
 test:
 	clojure -M:test
+
+run:
+	clojure -M:run

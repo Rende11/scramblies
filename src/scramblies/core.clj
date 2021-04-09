@@ -58,8 +58,8 @@
   (ring/ring-handler
    (ring/router
     ["/api"
-     ["/scramble" {:parameters {:query ::scrabmle-query-params}
-                   :get        {:handler scramble-handler}}]]
+       ["/scramble" {:parameters {:query ::scrabmle-query-params}
+                     :get        {:handler scramble-handler}}]]
     {:data {:muuntaja   m/instance
             :exception  pretty/exception
             :coercion   re-spec/coercion
@@ -73,7 +73,10 @@
                                {:reitit.coercion/request-coercion (coercion-error-handler 400)
                                 :reitit.coercion/response-coercion (coercion-error-handler 500)}))
                          rrc/coerce-request-middleware
-                         rrc/coerce-response-middleware]}})))
+                         rrc/coerce-response-middleware]}})
+   (ring/routes
+    (ring/create-resource-handler {:path "/"})
+    (ring/create-default-handler))))
 
 
 (defn stop-server []
@@ -82,7 +85,11 @@
     (reset! server nil)))
 
 (defn start-server []
-  (reset! server (server/run-server #'handler {:port 8080})))
+  (reset! server (server/run-server #'handler {:port 8080}))
+  (prn "Server running on port: 8080"))
+
+(defn -main [& args]
+  (start-server))
 
 
 
