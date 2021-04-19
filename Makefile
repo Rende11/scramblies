@@ -17,4 +17,4 @@ ui-dev:
 	clj -M:shadow:ui:ui-repl watch app
 
 ui-build:
-	clj -M:shadow release app
+	clj -M:shadow:ui release app
